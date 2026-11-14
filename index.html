@@ -119,15 +119,15 @@
     }
     .chip.active { background: #FFFFFF; color: var(--primary); border-color: #FFFFFF; }
 
-    main { max-width: 760px; margin: 12px auto 90px; padding: 0 12px; }
+    main { max-width: 760px; margin: 8px auto 80px; padding: 0 10px; }
     .card {
       background: var(--surface); border: 1px solid var(--border);
-      border-radius: 12px; padding: 12px 14px; margin-bottom: 9px;
+      border-radius: 10px; padding: 8px 10px; margin-bottom: 6px;
       box-shadow: 0 1px 2px rgba(0,0,0,0.03);
     }
     .card-head {
       display: flex; align-items: center; justify-content: space-between;
-      gap: 8px; margin-bottom: 8px;
+      gap: 6px; margin-bottom: 5px;
     }
     .site-title-wrap { display: flex; align-items: center; gap: 7px; min-width: 0; }
     .cat-tag {
@@ -136,41 +136,43 @@
       background: #F1F5F9; color: #334155; border: 1px solid #E2E8F0;
     }
     .site-name {
-      font-size: 16px; font-weight: 700; color: var(--text);
+      font-size: 15px; font-weight: 700; color: var(--text);
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .edit-btn {
       flex: 0 0 auto; background: none; border: 1px solid var(--border);
-      color: var(--muted); border-radius: 6px; padding: 3px 8px;
+      color: var(--muted); border-radius: 6px; padding: 2px 7px;
       font-size: 11px; cursor: pointer;
     }
-    .cred-row {
-      display: flex; align-items: center; justify-content: space-between;
-      gap: 8px; padding: 6px 8px; background: #F8FAFC;
-      border-radius: 8px; margin-top: 6px; border: 1px solid #F1F5F9;
+    .cred-grid {
+      display: grid; grid-template-columns: 1.2fr 1fr; gap: 6px;
     }
-    .cred-label {
-      font-size: 11px; font-weight: 700; color: var(--muted); width: 22px; flex-shrink: 0;
+    .cred-row {
+      min-width: 0;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 5px; padding: 4px 6px; background: #F8FAFC;
+      border-radius: 7px; border: 1px solid #F1F5F9; min-height: 30px;
     }
     .cred-val {
-      flex: 1; font-size: 15px; font-weight: 500; color: var(--text);
+      flex: 1; min-width: 0; font-size: 14px; font-weight: 500; color: var(--text);
       overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
       letter-spacing: 0.2px;
     }
-    .cred-actions { display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
+    .cred-val.empty { color: #CBD5E1; }
+    .cred-actions { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
     .eye-btn {
       background: #fff; border: 1px solid var(--border); color: var(--muted);
-      border-radius: 6px; padding: 5px 8px; font-size: 12px; cursor: pointer;
+      border-radius: 5px; padding: 3px 5px; font-size: 12px; line-height: 1; cursor: pointer;
     }
     .copy-btn {
       background: var(--primary); color: #fff; border: none;
-      border-radius: 6px; padding: 5px 11px; font-size: 12px; font-weight: 700;
-      cursor: pointer; min-width: 64px; transition: background 0.15s;
+      border-radius: 5px; padding: 4px 7px; font-size: 11px; font-weight: 700;
+      line-height: 1.1; cursor: pointer; min-width: 30px; transition: background 0.15s;
     }
     .copy-btn.copied { background: var(--success); }
     .memo-box {
-      margin-top: 7px; font-size: 12px; color: var(--muted);
-      padding-left: 2px; line-height: 1.4; word-break: break-all;
+      margin-top: 5px; font-size: 11.5px; color: var(--muted);
+      padding-left: 2px; line-height: 1.35; word-break: break-all;
     }
 
     .fab {
@@ -516,25 +518,25 @@
               </div>
               <button class="edit-btn" onclick="openEditModal(${item.rowIndex})">수정</button>
             </div>
-            ${item.id ? `
+            <div class="cred-grid">
               <div class="cred-row">
-                <span class="cred-label">ID</span>
-                <span class="cred-val">${escapeHtml(item.id)}</span>
-                <div class="cred-actions">
-                  <button class="copy-btn" onclick="copyText(this, '${escapeAttr(item.id)}')">ID 복사</button>
-                </div>
+                ${item.id ? `
+                  <span class="cred-val">${escapeHtml(item.id)}</span>
+                  <div class="cred-actions">
+                    <button class="copy-btn" onclick="copyText(this, '${escapeAttr(item.id)}')">ID</button>
+                  </div>
+                ` : `<span class="cred-val empty">-</span>`}
               </div>
-            ` : ''}
-            ${item.pw ? `
               <div class="cred-row">
-                <span class="cred-label">PW</span>
-                <span class="cred-val">${isShown ? escapeHtml(item.pw) : maskedPw}</span>
-                <div class="cred-actions">
-                  <button class="eye-btn" onclick="togglePw(${item.rowIndex})">${isShown ? '숨김' : '보기'}</button>
-                  <button class="copy-btn" onclick="copyText(this, '${escapeAttr(item.pw)}')">PW 복사</button>
-                </div>
+                ${item.pw ? `
+                  <span class="cred-val">${isShown ? escapeHtml(item.pw) : maskedPw}</span>
+                  <div class="cred-actions">
+                    <button class="eye-btn" onclick="togglePw(${item.rowIndex})" title="${isShown ? '숨김' : '보기'}">${isShown ? '🙈' : '👁'}</button>
+                    <button class="copy-btn" onclick="copyText(this, '${escapeAttr(item.pw)}')">PW</button>
+                  </div>
+                ` : `<span class="cred-val empty">-</span>`}
               </div>
-            ` : ''}
+            </div>
             ${item.memo ? `<div class="memo-box">메모: ${escapeHtml(item.memo)}</div>` : ''}
           </div>
         `;
@@ -551,12 +553,12 @@
       try {
         await navigator.clipboard.writeText(text);
         const orig = btn.textContent;
-        btn.textContent = '복사됨 ✓';
+        btn.textContent = '✓';
         btn.classList.add('copied');
         setTimeout(() => {
           btn.textContent = orig;
           btn.classList.remove('copied');
-        }, 1400);
+        }, 1200);
       } catch (e) {
         alert('복사 실패: 브라우저 권한을 확인하세요.');
       }
