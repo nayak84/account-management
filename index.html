@@ -321,7 +321,7 @@
 
   <script>
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('./sw.js').catch(() => {});
+      navigator.serviceWorker.register('./sw.js').then(reg => reg.update()).catch(() => {});
     }
 
     const STORAGE_URL_KEY = 'vault_gas_url';
