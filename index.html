@@ -553,8 +553,8 @@
             <div class="card-head">
               <div class="site-title-wrap">
                 <span class="cat-tag">${escapeHtml(item.category)}</span>
-                <button type="button" class="fav-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite(${item.rowIndex})" title="${isFav ? '즐겨찾기 해제' : '즐겨찾기 등록'}">${isFav ? '★' : '☆'}</button>
                 <span class="site-name">${escapeHtml(item.site)}</span>
+                <button type="button" class="fav-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite(${item.rowIndex})" title="${isFav ? '즐겨찾기 해제' : '즐겨찾기 등록'}">${isFav ? '★' : '☆'}</button>
               </div>
               <button class="edit-btn" onclick="openEditModal(${item.rowIndex})">수정</button>
             </div>
