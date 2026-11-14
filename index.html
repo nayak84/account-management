@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>My Vault</title>
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+  <meta name="theme-color" content="#0F172A" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Roboto+Condensed:wght@400;500;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #F8FAFC;
+      --surface: #FFFFFF;
+      --primary: #0F172A;
+      --primary-hover: #1E293B;
+      --accent: #2563EB;
+      --success: #059669;
+      --danger: #DC2626;
+      --border: #E2E8F0;
+      --text: #0F172A;
+      --muted: #64748B;
+    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Roboto Condensed', 'Noto Sans KR', sans-serif;
+      font-variant-numeric: tabular-nums;
+      -webkit-font-smoothing: antialiased;
+    }
+    button, input, select { font-family: inherit; }
+
+    .overlay {
+      position: fixed; inset: 0; background: var(--primary); color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px; z-index: 1000;
+    }
+    .lock-card {
+      background: #1E293B; border: 1px solid #334155; border-radius: 16px;
+      padding: 28px 24px; width: 100%; max-width: 380px; text-align: center;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.35);
+    }
+    .lock-card h2 { margin: 0 0 6px; font-size: 22px; font-weight: 700; }
+    .lock-card p { margin: 0 0 20px; font-size: 13px; color: #94A3B8; }
+    .lock-input {
+      width: 100%; padding: 13px 14px; border-radius: 10px;
+      border: 1px solid #475569; background: #0F172A; color: #fff;
+      font-size: 16px; margin-bottom: 12px; outline: none;
+    }
+    .lock-input.pin { text-align: center; letter-spacing: 6px; font-size: 22px; font-weight: 700; }
+    .lock-input:focus { border-color: #60A5FA; }
+    .btn-full {
+      width: 100%; padding: 13px; border: none; border-radius: 10px;
+      background: var(--accent); color: #fff; font-size: 15px; font-weight: 700;
+      cursor: pointer;
+    }
+    .btn-full:disabled { opacity: 0.6; cursor: not-allowed; }
+    .link-btn {
+      background: none; border: none; color: #94A3B8; font-size: 12px;
+      margin-top: 14px; cursor: pointer; text-decoration: underline;
+    }
+    .err-msg { color: #FCA5A5; font-size: 13px; margin-bottom: 10px; min-height: 18px; }
+
+    header {
+      position: sticky; top: 0; z-index: 50;
+      background: var(--primary); color: #fff;
+      padding: 12px 14px 10px;
+      box-shadow: 0 2px 8px rgba(15,23,42,0.12);
+    }
+    .top-bar {
+      max-width: 760px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    }
+    .brand { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 17px; }
+    .count-badge {
+      background: #334155; color: #E2E8F0; font-size: 12px;
+      padding: 2px 8px; border-radius: 99px; font-weight: 500;
+    }
+    .top-actions { display: flex; gap: 6px; }
+    .icon-btn {
+      background: #1E293B; border: 1px solid #334155; color: #E2E8F0;
+      border-radius: 8px; padding: 6px 10px; font-size: 12px; font-weight: 600;
+      cursor: pointer;
+    }
+    .icon-btn:hover { background: #334155; }
+
+    .search-wrap {
+      max-width: 760px; margin: 10px auto 0; position: relative;
+    }
+    .search-input {
+      width: 100%; padding: 10px 36px 10px 12px;
+      border-radius: 10px; border: 1px solid #334155;
+      background: #1E293B; color: #fff; font-size: 15px; outline: none;
+    }
+    .search-input::placeholder { color: #94A3B8; }
+    .search-input:focus { border-color: #60A5FA; background: #0F172A; }
+    .clear-search {
+      position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; color: #94A3B8; font-size: 16px;
+      cursor: pointer; display: none;
+    }
+
+    .cat-bar {
+      max-width: 760px; margin: 10px auto 0;
+      display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px;
+      scrollbar-width: none;
+    }
+    .cat-bar::-webkit-scrollbar { display: none; }
+    .chip {
+      flex: 0 0 auto; padding: 5px 11px; border-radius: 99px;
+      border: 1px solid #334155; background: #1E293B; color: #CBD5E1;
+      font-size: 12px; font-weight: 600; cursor: pointer;
+    }
+    .chip.active { background: #FFFFFF; color: var(--primary); border-color: #FFFFFF; }
+
+    main { max-width: 760px; margin: 12px auto 90px; padding: 0 12px; }
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 12px 14px; margin-bottom: 9px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+    }
+    .card-head {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 8px; margin-bottom: 8px;
+    }
+    .site-title-wrap { display: flex; align-items: center; gap: 7px; min-width: 0; }
+    .cat-tag {
+      flex: 0 0 auto; font-size: 11px; font-weight: 700;
+      padding: 2px 7px; border-radius: 6px;
+      background: #F1F5F9; color: #334155; border: 1px solid #E2E8F0;
+    }
+    .site-name {
+      font-size: 16px; font-weight: 700; color: var(--text);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .edit-btn {
+      flex: 0 0 auto; background: none; border: 1px solid var(--border);
+      color: var(--muted); border-radius: 6px; padding: 3px 8px;
+      font-size: 11px; cursor: pointer;
+    }
+    .cred-row {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 8px; padding: 6px 8px; background: #F8FAFC;
+      border-radius: 8px; margin-top: 6px; border: 1px solid #F1F5F9;
+    }
+    .cred-label {
+      font-size: 11px; font-weight: 700; color: var(--muted); width: 22px; flex-shrink: 0;
+    }
+    .cred-val {
+      flex: 1; font-size: 15px; font-weight: 500; color: var(--text);
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      letter-spacing: 0.2px;
+    }
+    .cred-actions { display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
+    .eye-btn {
+      background: #fff; border: 1px solid var(--border); color: var(--muted);
+      border-radius: 6px; padding: 5px 8px; font-size: 12px; cursor: pointer;
+    }
+    .copy-btn {
+      background: var(--primary); color: #fff; border: none;
+      border-radius: 6px; padding: 5px 11px; font-size: 12px; font-weight: 700;
+      cursor: pointer; min-width: 64px; transition: background 0.15s;
+    }
+    .copy-btn.copied { background: var(--success); }
+    .memo-box {
+      margin-top: 7px; font-size: 12px; color: var(--muted);
+      padding-left: 2px; line-height: 1.4; word-break: break-all;
+    }
+
+    .fab {
+      position: fixed; right: 18px; bottom: 22px;
+      width: 54px; height: 54px; border-radius: 50%;
+      background: var(--accent); color: #fff; border: none;
+      font-size: 28px; font-weight: 400; cursor: pointer;
+      box-shadow: 0 8px 20px rgba(37,99,235,0.35);
+      display: flex; align-items: center; justify-content: center; z-index: 40;
+    }
+
+    .modal-bg {
+      position: fixed; inset: 0; background: rgba(15,23,42,0.6);
+      display: none; align-items: center; justify-content: center;
+      padding: 16px; z-index: 200;
+    }
+    .modal-bg.open { display: flex; }
+    .modal {
+      background: #fff; border-radius: 14px; width: 100%; max-width: 420px;
+      padding: 20px; max-height: 90vh; overflow-y: auto;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+    }
+    .modal h3 { margin: 0 0 14px; font-size: 18px; }
+    .field { margin-bottom: 11px; }
+    .field label { display: block; font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 4px; }
+    .field input, .field select {
+      width: 100%; padding: 10px 11px; border: 1px solid var(--border);
+      border-radius: 8px; font-size: 15px; outline: none;
+    }
+    .field input:focus, .field select:focus { border-color: var(--accent); }
+    .modal-btns { display: flex; gap: 8px; margin-top: 16px; }
+    .btn-sec {
+      flex: 1; padding: 11px; border-radius: 8px; border: 1px solid var(--border);
+      background: #fff; font-weight: 700; cursor: pointer;
+    }
+    .btn-pri {
+      flex: 2; padding: 11px; border-radius: 8px; border: none;
+      background: var(--primary); color: #fff; font-weight: 700; cursor: pointer;
+    }
+    .btn-del {
+      padding: 11px 12px; border-radius: 8px; border: 1px solid #FECACA;
+      background: #FEF2F2; color: var(--danger); font-weight: 700; cursor: pointer;
+    }
+    .cat-list-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px;
+      margin-bottom: 6px; font-size: 14px;
+    }
+    .empty-state { text-align: center; padding: 48px 16px; color: var(--muted); font-size: 14px; }
+  </style>
+</head>
+<body>
+
+  <div id="lockScreen" class="overlay">
+    <div class="lock-card">
+      <h2>My Vault</h2>
+      <p id="lockDesc">보안 PIN 번호를 입력하세요</p>
+      <div id="urlSetupWrap" style="display:none;">
+        <input type="url" id="gasUrlInput" class="lock-input" placeholder="GAS 웹 앱 URL (https://script.google.com/...)" />
+      </div>
+      <input type="password" inputmode="numeric" id="pinInput" class="lock-input pin" placeholder="••••••" />
+      <div id="lockErr" class="err-msg"></div>
+      <button id="unlockBtn" class="btn-full" onclick="unlockApp()">잠금 해제</button>
+      <button class="link-btn" onclick="toggleUrlSetup()">GAS 서버 URL 설정 / 변경</button>
+    </div>
+  </div>
+
+  <header>
+    <div class="top-bar">
+      <div class="brand">
+        <span>My Vault</span>
+        <span id="itemCount" class="count-badge">0</span>
+      </div>
+      <div class="top-actions">
+        <button class="icon-btn" onclick="openCatModal()">분류 관리</button>
+        <button class="icon-btn" onclick="reloadData()">새로고침</button>
+        <button class="icon-btn" onclick="lockNow()">잠금</button>
+      </div>
+    </div>
+    <div class="search-wrap">
+      <input type="text" id="searchInput" class="search-input" placeholder="사이트명, 초성(ㄴㅇㅂ), 아이디, 메모 검색..." oninput="onSearchInput()" />
+      <button id="clearSearchBtn" class="clear-search" onclick="clearSearch()">✕</button>
+    </div>
+    <div id="catBar" class="cat-bar"></div>
+  </header>
+
+  <main id="listContainer">
+    <div class="empty-state">데이터를 불러오는 중...</div>
+  </main>
+
+  <button class="fab" onclick="openEditModal()" title="새 계정 등록">+</button>
+
+  <div id="editModalBg" class="modal-bg">
+    <div class="modal">
+      <h3 id="editModalTitle">새 계정 등록</h3>
+      <input type="hidden" id="editRowIndex" />
+      <div class="field">
+        <label>분류 (카테고리)</label>
+        <select id="editCatSelect" onchange="onCatSelectChange()"></select>
+        <input type="text" id="editNewCatInput" placeholder="새 분류명 직접 입력" style="display:none; margin-top:6px;" />
+      </div>
+      <div class="field">
+        <label>사이트 / 서비스명 *</label>
+        <input type="text" id="editSite" placeholder="예: 네이버, 삼성화재" />
+      </div>
+      <div class="field">
+        <label>아이디 / 계좌 / 번호</label>
+        <input type="text" id="editId" placeholder="아이디 또는 이메일" />
+      </div>
+      <div class="field">
+        <label>비밀번호</label>
+        <input type="text" id="editPw" placeholder="비밀번호 입력" />
+      </div>
+      <div class="field">
+        <label>메모</label>
+        <input type="text" id="editMemo" placeholder="회원번호, 공동인증서 암호 등" />
+      </div>
+      <div class="modal-btns">
+        <button type="button" id="deleteBtn" class="btn-del" onclick="deleteAccount()" style="display:none;">삭제</button>
+        <button type="button" class="btn-sec" onclick="closeModal('editModalBg')">취소</button>
+        <button type="button" id="saveAccountBtn" class="btn-pri" onclick="saveAccount()">저장</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="catModalBg" class="modal-bg">
+    <div class="modal">
+      <h3>분류(카테고리) 관리</h3>
+      <div class="field" style="display:flex; gap:6px;">
+        <input type="text" id="addCatInput" placeholder="새 카테고리 이름 입력" />
+        <button type="button" class="btn-pri" style="flex:0 0 74px;" onclick="addCustomCategory()">추가</button>
+      </div>
+      <div id="catManageList" style="margin-top:12px;"></div>
+      <div class="modal-btns">
+        <button type="button" class="btn-sec" onclick="closeModal('catModalBg')">닫기</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js').catch(() => {});
+    }
+
+    const STORAGE_URL_KEY = 'vault_gas_url';
+    const STORAGE_CUSTOM_CATS = 'vault_custom_cats';
+    let sessionPin = '';
+    let allItems = [];
+    let selectedCategory = '전체';
+    let revealedRows = new Set();
+
+    const CHOSUNG = ['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
+    function getChosungChar(ch) {
+      const code = ch.charCodeAt(0) - 0xAC00;
+      if (code < 0 || code > 11171) return ch.toLowerCase();
+      return CHOSUNG[Math.floor(code / 588)];
+    }
+    function isChosungOnly(ch) {
+      return CHOSUNG.includes(ch);
+    }
+    function smartMatch(text, query) {
+      if (!query) return true;
+      if (!text) return false;
+      const t = text.toLowerCase().replace(/\s+/g, '');
+      const q = query.toLowerCase().replace(/\s+/g, '');
+      if (t.includes(q)) return true;
+      if (q.length > t.length) return false;
+
+      for (let i = 0; i <= t.length - q.length; i++) {
+        let matched = true;
+        for (let j = 0; j < q.length; j++) {
+          const qChar = q[j];
+          const tChar = t[i + j];
+          if (isChosungOnly(qChar)) {
+            if (getChosungChar(tChar) !== qChar) { matched = false; break; }
+          } else {
+            if (tChar !== qChar) { matched = false; break; }
+          }
+        }
+        if (matched) return true;
+      }
+      return false;
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedUrl = localStorage.getItem(STORAGE_URL_KEY) || '';
+      document.getElementById('gasUrlInput').value = savedUrl;
+      if (!savedUrl) {
+        document.getElementById('urlSetupWrap').style.display = 'block';
+        document.getElementById('lockDesc').textContent = '최초 1회 GAS 웹 앱 URL과 PIN을 입력하세요';
+      } else {
+        document.getElementById('pinInput').focus();
+      }
+
+      document.getElementById('pinInput').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') unlockApp();
+      });
+    });
+
+    function toggleUrlSetup() {
+      const wrap = document.getElementById('urlSetupWrap');
+      wrap.style.display = wrap.style.display === 'none' ? 'block' : 'none';
+    }
+
+    async function callApi(action, data = null) {
+      const url = localStorage.getItem(STORAGE_URL_KEY);
+      if (!url) throw new Error('GAS 웹 앱 URL이 설정되지 않았습니다.');
+      const res = await fetch(url, {
+        method: 'POST',
+        body: JSON.stringify({ pin: sessionPin, action, data })
+      });
+      return await res.json();
+    }
+
+    async function unlockApp() {
+      const urlInput = document.getElementById('gasUrlInput').value.trim();
+      const pinVal = document.getElementById('pinInput').value.trim();
+      const errEl = document.getElementById('lockErr');
+      const btn = document.getElementById('unlockBtn');
+
+      if (!urlInput) { errEl.textContent = 'GAS 웹 앱 URL을 입력해 주세요.'; return; }
+      if (!pinVal) { errEl.textContent = 'PIN 번호를 입력해 주세요.'; return; }
+
+      localStorage.setItem(STORAGE_URL_KEY, urlInput);
+      sessionPin = pinVal;
+      errEl.textContent = '';
+      btn.disabled = true;
+      btn.textContent = '확인 중...';
+
+      try {
+        const result = await callApi('getAll');
+        if (!result.success) {
+          errEl.textContent = result.error || '인증 실패';
+          sessionPin = '';
+        } else {
+          allItems = result.items || [];
+          document.getElementById('pinInput').value = '';
+          document.getElementById('lockScreen').style.display = 'none';
+          renderCategories();
+          renderList();
+          setTimeout(() => document.getElementById('searchInput').focus(), 100);
+        }
+      } catch (e) {
+        errEl.textContent = '서버 연결 오류: URL 및 배포 권한을 확인하세요.';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '잠금 해제';
+      }
+    }
+
+    function lockNow() {
+      sessionPin = '';
+      allItems = [];
+      revealedRows.clear();
+      document.getElementById('listContainer').innerHTML = '';
+      document.getElementById('lockScreen').style.display = 'flex';
+      document.getElementById('pinInput').focus();
+    }
+
+    async function reloadData() {
+      const container = document.getElementById('listContainer');
+      container.innerHTML = '<div class="empty-state">동기화 중...</div>';
+      try {
+        const result = await callApi('getAll');
+        if (result.success) {
+          allItems = result.items || [];
+          renderCategories();
+          renderList();
+        }
+      } catch (e) {
+        alert('데이터 새로고침 실패: ' + e.message);
+      }
+    }
+
+    function getAllCategories() {
+      const custom = JSON.parse(localStorage.getItem(STORAGE_CUSTOM_CATS) || '[]');
+      const fromItems = allItems.map(i => i.category).filter(Boolean);
+      return Array.from(new Set([...fromItems, ...custom]));
+    }
+
+    function renderCategories() {
+      const cats = ['전체', ...getAllCategories()];
+      if (!cats.includes(selectedCategory)) selectedCategory = '전체';
+      const bar = document.getElementById('catBar');
+      bar.innerHTML = cats.map(cat => `
+        <button class="chip ${cat === selectedCategory ? 'active' : ''}" onclick="selectCategory('${escapeHtml(cat)}')">
+          ${escapeHtml(cat)}
+        </button>
+      `).join('');
+    }
+
+    function selectCategory(cat) {
+      selectedCategory = cat;
+      renderCategories();
+      renderList();
+    }
+
+    function onSearchInput() {
+      const val = document.getElementById('searchInput').value;
+      document.getElementById('clearSearchBtn').style.display = val ? 'block' : 'none';
+      renderList();
+    }
+
+    function clearSearch() {
+      const inp = document.getElementById('searchInput');
+      inp.value = '';
+      document.getElementById('clearSearchBtn').style.display = 'none';
+      renderList();
+      inp.focus();
+    }
+
+    function renderList() {
+      const query = document.getElementById('searchInput').value.trim();
+      const filtered = allItems.filter(item => {
+        const catOk = selectedCategory === '전체' || item.category === selectedCategory;
+        if (!catOk) return false;
+        if (!query) return true;
+        return (
+          smartMatch(item.site, query) ||
+          smartMatch(item.id, query) ||
+          smartMatch(item.memo, query) ||
+          smartMatch(item.category, query)
+        );
+      });
+
+      document.getElementById('itemCount').textContent = filtered.length;
+      const container = document.getElementById('listContainer');
+
+      if (filtered.length === 0) {
+        container.innerHTML = '<div class="empty-state">일치하는 계정 정보가 없습니다.</div>';
+        return;
+      }
+
+      container.innerHTML = filtered.map(item => {
+        const isShown = revealedRows.has(item.rowIndex);
+        const maskedPw = item.pw ? '•'.repeat(Math.min(item.pw.length, 10)) : '-';
+        return `
+          <div class="card">
+            <div class="card-head">
+              <div class="site-title-wrap">
+                <span class="cat-tag">${escapeHtml(item.category)}</span>
+                <span class="site-name">${escapeHtml(item.site)}</span>
+              </div>
+              <button class="edit-btn" onclick="openEditModal(${item.rowIndex})">수정</button>
+            </div>
+            ${item.id ? `
+              <div class="cred-row">
+                <span class="cred-label">ID</span>
+                <span class="cred-val">${escapeHtml(item.id)}</span>
+                <div class="cred-actions">
+                  <button class="copy-btn" onclick="copyText(this, '${escapeAttr(item.id)}')">ID 복사</button>
+                </div>
+              </div>
+            ` : ''}
+            ${item.pw ? `
+              <div class="cred-row">
+                <span class="cred-label">PW</span>
+                <span class="cred-val">${isShown ? escapeHtml(item.pw) : maskedPw}</span>
+                <div class="cred-actions">
+                  <button class="eye-btn" onclick="togglePw(${item.rowIndex})">${isShown ? '숨김' : '보기'}</button>
+                  <button class="copy-btn" onclick="copyText(this, '${escapeAttr(item.pw)}')">PW 복사</button>
+                </div>
+              </div>
+            ` : ''}
+            ${item.memo ? `<div class="memo-box">메모: ${escapeHtml(item.memo)}</div>` : ''}
+          </div>
+        `;
+      }).join('');
+    }
+
+    function togglePw(rowIndex) {
+      if (revealedRows.has(rowIndex)) revealedRows.delete(rowIndex);
+      else revealedRows.add(rowIndex);
+      renderList();
+    }
+
+    async function copyText(btn, text) {
+      try {
+        await navigator.clipboard.writeText(text);
+        const orig = btn.textContent;
+        btn.textContent = '복사됨 ✓';
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.textContent = orig;
+          btn.classList.remove('copied');
+        }, 1400);
+      } catch (e) {
+        alert('복사 실패: 브라우저 권한을 확인하세요.');
+      }
+    }
+
+    function openEditModal(rowIndex = null) {
+      const cats = getAllCategories();
+      const sel = document.getElementById('editCatSelect');
+      sel.innerHTML = cats.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('') +
+        `<option value="__NEW__">+ 새 분류 직접 입력...</option>`;
+      document.getElementById('editNewCatInput').style.display = 'none';
+      document.getElementById('editNewCatInput').value = '';
+
+      if (rowIndex) {
+        const item = allItems.find(i => i.rowIndex === rowIndex);
+        document.getElementById('editModalTitle').textContent = '계정 정보 수정';
+        document.getElementById('editRowIndex').value = rowIndex;
+        sel.value = item.category;
+        document.getElementById('editSite').value = item.site;
+        document.getElementById('editId').value = item.id;
+        document.getElementById('editPw').value = item.pw;
+        document.getElementById('editMemo').value = item.memo;
+        document.getElementById('deleteBtn').style.display = 'block';
+      } else {
+        document.getElementById('editModalTitle').textContent = '새 계정 등록';
+        document.getElementById('editRowIndex').value = '';
+        if (selectedCategory !== '전체' && cats.includes(selectedCategory)) sel.value = selectedCategory;
+        document.getElementById('editSite').value = '';
+        document.getElementById('editId').value = '';
+        document.getElementById('editPw').value = '';
+        document.getElementById('editMemo').value = '';
+        document.getElementById('deleteBtn').style.display = 'none';
+      }
+      document.getElementById('editModalBg').classList.add('open');
+    }
+
+    function onCatSelectChange() {
+      const isNew = document.getElementById('editCatSelect').value === '__NEW__';
+      document.getElementById('editNewCatInput').style.display = isNew ? 'block' : 'none';
+      if (isNew) document.getElementById('editNewCatInput').focus();
+    }
+
+    async function saveAccount() {
+      const rowIndex = Number(document.getElementById('editRowIndex').value);
+      let category = document.getElementById('editCatSelect').value;
+      if (category === '__NEW__') {
+        category = document.getElementById('editNewCatInput').value.trim();
+        if (!category) { alert('새 분류명을 입력하세요.'); return; }
+        saveCustomCatLocal(category);
+      }
+      const site = document.getElementById('editSite').value.trim();
+      const id = document.getElementById('editId').value.trim();
+      const pw = document.getElementById('editPw').value.trim();
+      const memo = document.getElementById('editMemo').value.trim();
+
+      if (!site) { alert('사이트명을 입력하세요.'); return; }
+
+      const btn = document.getElementById('saveAccountBtn');
+      btn.disabled = true;
+      btn.textContent = '저장 중...';
+
+      try {
+        const res = rowIndex
+          ? await callApi('update', { rowIndex, category, site, id, pw, memo })
+          : await callApi('add', { category, site, id, pw, memo });
+
+        if (!res.success) throw new Error(res.error);
+        closeModal('editModalBg');
+        await reloadData();
+      } catch (e) {
+        alert('저장 오류: ' + e.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '저장';
+      }
+    }
+
+    async function deleteAccount() {
+      const rowIndex = Number(document.getElementById('editRowIndex').value);
+      if (!rowIndex || !confirm('이 계정 항목을 시트에서 삭제할까요?')) return;
+      try {
+        const res = await callApi('delete', { rowIndex });
+        if (!res.success) throw new Error(res.error);
+        closeModal('editModalBg');
+        await reloadData();
+      } catch (e) {
+        alert('삭제 오류: ' + e.message);
+      }
+    }
+
+    function saveCustomCatLocal(name) {
+      const custom = JSON.parse(localStorage.getItem(STORAGE_CUSTOM_CATS) || '[]');
+      if (!custom.includes(name)) {
+        custom.push(name);
+        localStorage.setItem(STORAGE_CUSTOM_CATS, JSON.stringify(custom));
+      }
+    }
+
+    function openCatModal() {
+      renderCatManageList();
+      document.getElementById('catModalBg').classList.add('open');
+    }
+
+    function renderCatManageList() {
+      const cats = getAllCategories();
+      const listEl = document.getElementById('catManageList');
+      listEl.innerHTML = cats.map(cat => {
+        const cnt = allItems.filter(i => i.category === cat).length;
+        return `
+          <div class="cat-list-item">
+            <span><strong>${escapeHtml(cat)}</strong> <small style="color:#64748B;">(${cnt}건)</small></span>
+            <button class="edit-btn" onclick="renameCategoryPrompt('${escapeAttr(cat)}')">이름 변경</button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function addCustomCategory() {
+      const inp = document.getElementById('addCatInput');
+      const name = inp.value.trim();
+      if (!name) return;
+      saveCustomCatLocal(name);
+      inp.value = '';
+      renderCatManageList();
+      renderCategories();
+    }
+
+    async function renameCategoryPrompt(oldName) {
+      const newName = prompt(`'${oldName}' 분류명을 무엇으로 변경할까요?\n(시트에 등록된 모든 항목이 함께 변경됩니다)`, oldName);
+      if (!newName || newName.trim() === '' || newName.trim() === oldName) return;
+      try {
+        const res = await callApi('renameCategory', { oldName, newName: newName.trim() });
+        if (!res.success) throw new Error(res.error);
+        const custom = JSON.parse(localStorage.getItem(STORAGE_CUSTOM_CATS) || '[]');
+        const idx = custom.indexOf(oldName);
+        if (idx !== -1) custom[idx] = newName.trim();
+        localStorage.setItem(STORAGE_CUSTOM_CATS, JSON.stringify(custom));
+        if (selectedCategory === oldName) selectedCategory = newName.trim();
+        await reloadData();
+        renderCatManageList();
+      } catch (e) {
+        alert('분류명 변경 실패: ' + e.message);
+      }
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.remove('open');
+    }
+
+    function escapeHtml(str) {
+      return String(str || '').replace(/[&<>"']/g, m => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[m]));
+    }
+    function escapeAttr(str) {
+      return String(str || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\n/g, ' ');
+    }
+  </script>
+</body>
+</html>
